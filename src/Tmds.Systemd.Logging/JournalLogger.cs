@@ -9,15 +9,15 @@ namespace Tmds.Systemd.Logging
         internal static readonly Action<Exception, JournalMessage> DefaultExceptionFormatter =
             (exception, message) => FormatException(exception, message);
 
-        private static readonly JournalFieldName Logger = "LOGGER";
-        private static readonly JournalFieldName EventId = "EVENTID";
-        private static readonly JournalFieldName Exception = "EXCEPTION";
-        private static readonly JournalFieldName ExceptionType = "EXCEPTION_TYPE";
-        private static readonly JournalFieldName ExceptionStackTrace = "EXCEPTION_STACKTRACE";
-        private static readonly JournalFieldName InnerException = "INNEREXCEPTION";
-        private static readonly JournalFieldName InnerExceptionType = "INNEREXCEPTION_TYPE";
-        private static readonly JournalFieldName InnerExceptionStackTrace = "INNEREXCEPTION_STACKTRACE";
-        private const string OriginalFormat = "{OriginalFormat}";
+        internal static readonly JournalFieldName Logger = "LOGGER";
+        internal static readonly JournalFieldName EventId = "EVENTID";
+        internal static readonly JournalFieldName Exception = "EXCEPTION";
+        internal static readonly JournalFieldName ExceptionType = "EXCEPTION_TYPE";
+        internal static readonly JournalFieldName ExceptionStackTrace = "EXCEPTION_STACKTRACE";
+        internal static readonly JournalFieldName InnerException = "INNEREXCEPTION";
+        internal static readonly JournalFieldName InnerExceptionType = "INNEREXCEPTION_TYPE";
+        internal static readonly JournalFieldName InnerExceptionStackTrace = "INNEREXCEPTION_STACKTRACE";
+        internal const string OriginalFormat = "{OriginalFormat}";
 
         private readonly LogFlags _additionalFlags;
         private readonly string   _syslogIdentifier;

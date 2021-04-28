@@ -1,15 +1,14 @@
 using System;
-using System.Buffers.Binary;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
-using Xunit;
-using Tmds.Systemd;
-using System.Threading;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading;
+using Xunit;
+using static Tmds.Systemd.Tests.ReadMessageFields;
 
 namespace Tmds.Systemd.Tests
 {
@@ -20,7 +19,7 @@ namespace Tmds.Systemd.Tests
         public void Serialization(Dictionary<string, object> serializedFields)
         {
             CultureInfo originalCulture = Thread.CurrentThread.CurrentCulture;
-            Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("nl-BE");
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("nl-BE");
             Dictionary<string, string> deserializedFields;
             using (var message = CreateJournalMessage())
             {
@@ -237,12 +236,9 @@ namespace Tmds.Systemd.Tests
 
         private void TestLogExisting()
         {
-            string socketPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-            using (Socket serverSocket = new Socket(AddressFamily.Unix, SocketType.Dgram, ProtocolType.Unspecified))
+            using (var socket = new FakeJournalSocket())
             {
-                serverSocket.Blocking = false;
-                serverSocket.Bind(new UnixDomainSocketEndPoint(socketPath));
-                Journal.ConfigureJournalSocket(socketPath);
+                var serverSocket = socket.Socket;
 
                 // Journal is available
                 Assert.True(Journal.IsAvailable);
@@ -314,49 +310,6 @@ namespace Tmds.Systemd.Tests
             }
         }
 
-        private static Dictionary<string, string> ReadFields(Socket socket)
-        {
-            var datas = new List<ArraySegment<byte>>();
-            int length = socket.Available;
-            if (length > 0)
-            {
-                byte[] data = new byte[length];
-                int bytesReceived = socket.Receive(data);
-                datas.Add(new ArraySegment<byte>(data, 0, bytesReceived));
-            }
-            return ReadFields(datas);
-        }
-
-        private static Dictionary<string, string> ReadFields(JournalMessage message)
-            => ReadFields(message.GetData());
-
-        private static Dictionary<string, string> ReadFields(List<ArraySegment<byte>> datas)
-        {
-            var fields = new Dictionary<string, string>();
-            byte[] bytes;
-            using (var memoryStream = new MemoryStream())
-            {
-                foreach (var data in datas)
-                {
-                    memoryStream.Write(data.Array, data.Offset, data.Count);
-                }
-                bytes = memoryStream.ToArray();
-            }
-            Span<byte> remainder = bytes;
-            while (remainder.Length > 0)
-            {
-                int fieldNameLength = remainder.IndexOf((byte)'\n');
-                string fieldName = Encoding.UTF8.GetString(remainder.Slice(0, fieldNameLength));
-                remainder = remainder.Slice(fieldNameLength + 1);
-                int fieldValueLength = (int)BinaryPrimitives.ReadUInt64LittleEndian(remainder);
-                remainder = remainder.Slice(8);
-                string fieldValue = Encoding.UTF8.GetString(remainder.Slice(0, fieldValueLength));
-                remainder = remainder.Slice(fieldValueLength + 1);
-                fields.Add(fieldName, fieldValue);
-            }
-            return fields;
-        }
-
         private static JournalMessage CreateJournalMessage()
         {
             return JournalMessage.Get(isEnabled: true);
@@ -368,7 +321,7 @@ namespace Tmds.Systemd.Tests
             {
                 return (string)value;
             }
-            else if (checkEnumerable && value is System.Collections.IEnumerable enumerable)
+            else if (checkEnumerable && value is IEnumerable enumerable)
             {
                 StringBuilder sb = new StringBuilder();
                 bool first = true;
