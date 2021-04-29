@@ -146,6 +146,39 @@ The logging added is **structured logging**. For example, these entries are stor
 
 To follow the journal logging live you can use this command `journalctl -f -t dotnet -o json-pretty | grep -v \"_`.
 
+### ExtraFields option
+
+You can specify `ExtraFields` in the configuration, which sets some extra fields that will be added to every log message.
+This is useful if for example you want to identify all messages coming from different instances of a container. 
+
+```json
+{
+  "Logging": {
+    "Journal": {
+      "ExtraFields": {
+        "MY_CONTAINER_NAME": "container-app-1"
+      }
+    }
+  }
+}
+```
+
+```json
+{
+    "PRIORITY" : "6",
+    "SYSLOG_IDENTIFIER" : "dotnet",
+    "LOGGER" : "Microsoft.AspNetCore.Hosting.Internal.WebHost", 
+    "MY_CONTAINER_NAME": "container-app-1",
+    "EVENTID" : "2",
+    "STATUSCODE" : "307",
+    "REQUESTPATH" : "/",
+    "CONNECTIONID" : "0HLDSN5JGSU79",
+    "REQUESTID" : "0HLDSN5JGSU79:00000001",
+    "MESSAGE" : "Request finished in 10.9215ms 307 ",
+    "ELAPSEDMILLISECONDS" : "10.9215"
+}
+```
+
 ## Using systemd with .NET Core applications
 
 Services can be created on the system-level systemd instance or on a user-level instance that is running as long as the user is

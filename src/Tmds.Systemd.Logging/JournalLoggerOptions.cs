@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Tmds.Systemd.Logging
 {
@@ -26,5 +27,10 @@ namespace Tmds.Systemd.Logging
         /// Gets or sets a delegate that is used to format exceptions.
         /// </summary>
         public Action<Exception, JournalMessage> ExceptionFormatter { get; set; } = DefaultExceptionFormatter;
+
+        /// <summary>
+        /// Gets or sets a dictionary of extra fields that are added to each log message
+        /// </summary>
+        public Dictionary<string, string> ExtraFields { get; set; } = new Dictionary<string, string>();
     }
 }

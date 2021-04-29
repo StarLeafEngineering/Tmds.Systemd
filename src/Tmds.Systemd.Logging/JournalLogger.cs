@@ -22,6 +22,7 @@ namespace Tmds.Systemd.Logging
         private readonly LogFlags _additionalFlags;
         private readonly string   _syslogIdentifier;
         private readonly Action<Exception, JournalMessage> _exceptionFormatter;
+        private readonly Dictionary<string, string> _extraFields;
 
         internal JournalLogger(string name, IExternalScopeProvider scopeProvider, JournalLoggerOptions options)
         {
@@ -39,6 +40,7 @@ namespace Tmds.Systemd.Logging
             _syslogIdentifier = options.SyslogIdentifier;
             _additionalFlags |= LogFlags.DontAppendSyslogIdentifier;
             _exceptionFormatter = options.ExceptionFormatter;
+            _extraFields = options.ExtraFields;
         }
 
         internal IExternalScopeProvider ScopeProvider { get; set; }
@@ -99,6 +101,10 @@ namespace Tmds.Systemd.Logging
                         logMessage.Append(JournalFieldName.SyslogIdentifier, _syslogIdentifier);
                     }
                     logMessage.Append(Logger, Name);
+                    foreach (var field in _extraFields)
+                    {
+                        logMessage.Append(field.Key, field.Value);
+                    }
                     if (eventId.Id != 0 || eventId.Name != null)
                     {
                         logMessage.Append(EventId, eventId.Id);

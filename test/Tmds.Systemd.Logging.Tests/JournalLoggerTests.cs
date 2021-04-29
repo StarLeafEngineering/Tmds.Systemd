@@ -26,11 +26,15 @@ namespace Tmds.Systemd.Logging.Tests
             return ReadMessageFields.ReadFields(_socket.Socket);
         }
 
-        private static JournalLogger Logger(string name="name", string syslogIdentifier="syslog")
+        private static JournalLogger Logger(
+            string name="name",
+            string syslogIdentifier="syslog",
+            Dictionary<string, string>? extraFields=null)
         {
             return new JournalLogger(name, new FakeScopeProvider(), new JournalLoggerOptions()
             {
                 SyslogIdentifier = syslogIdentifier,
+                ExtraFields = extraFields ?? new Dictionary<string, string>(),
             });
         }
 
@@ -154,6 +158,25 @@ namespace Tmds.Systemd.Logging.Tests
             Assert.Equal(ExceptionMessage, fields[JournalLogger.Exception.ToString()]);
             Assert.Equal(exceptionType, fields[JournalLogger.ExceptionType.ToString()]);
             Assert.Equal(exceptionStackTrace, fields[JournalLogger.ExceptionStackTrace.ToString()]);
+        }
+
+        [Fact]
+        private void WriteConfiguredExtraFields()
+        {
+            const string globalContextKey = "GLOBAL_CONTEXT_KEY";
+            const string globalContextValue = "GLOBAL_CONTEXT_VALUE";
+
+            var logger = Logger(
+                extraFields: new Dictionary<string, string>
+                {
+                    [globalContextKey] = globalContextValue,
+                }
+            );
+
+            logger.LogInformation("A message");
+
+            var fields = ReadFields();
+            Assert.Equal(globalContextValue, fields[globalContextKey]);
         }
 
     }
