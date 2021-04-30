@@ -3,7 +3,7 @@
     <VersionPrefix>0.8.0</VersionPrefix>
     <Authors>Tom Deseyn; Michael Birtwell</Authors>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/mbirtwell/Tmds.Systemd</RepositoryUrl>
+    <RepositoryUrl>https://github.com/StarLeafEngineering/Tmds.Systemd</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Copyright>Tom Deseyn; Michael Birtwell</Copyright>
   </PropertyGroup>
