@@ -179,6 +179,12 @@ This is useful if for example you want to identify all messages coming from diff
 }
 ```
 
+### Unstructured logging
+
+Structured logging is good, but if you have an unstructured logging pipeline upstream it can be awkward to convert. 
+The `IncludeScopesInMessage` and `IncludeExceptionInfoInMessage` options can be set to include these bits of information
+in the `MESSAGE` field in the journal.
+
 ## Using systemd with .NET Core applications
 
 Services can be created on the system-level systemd instance or on a user-level instance that is running as long as the user is

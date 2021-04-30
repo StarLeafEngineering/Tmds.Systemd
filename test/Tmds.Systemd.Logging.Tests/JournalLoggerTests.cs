@@ -29,12 +29,16 @@ namespace Tmds.Systemd.Logging.Tests
         private static JournalLogger Logger(
             string name="name",
             string syslogIdentifier="syslog",
-            Dictionary<string, string>? extraFields=null)
+            Dictionary<string, string>? extraFields=null,
+            bool includeScopesInMessage=false,
+            bool includeExceptionInfoInMessage=false)
         {
             return new JournalLogger(name, new FakeScopeProvider(), new JournalLoggerOptions()
             {
                 SyslogIdentifier = syslogIdentifier,
                 ExtraFields = extraFields ?? new Dictionary<string, string>(),
+                IncludeScopesInMessage = includeScopesInMessage,
+                IncludeExceptionInfoInMessage = includeExceptionInfoInMessage,
             });
         }
 
@@ -177,6 +181,49 @@ namespace Tmds.Systemd.Logging.Tests
 
             var fields = ReadFields();
             Assert.Equal(globalContextValue, fields[globalContextKey]);
+        }
+
+        [Fact]
+        private void WriteStringScopeInToMessage()
+        {
+            const string message = "A message";
+            const string scope = "some_scope";
+            var logger = Logger(
+                includeScopesInMessage: true
+            );
+
+            using (logger.BeginScope(scope))
+            {
+                logger.LogInformation(message);
+            }
+
+            var fields = ReadFields();
+
+            Assert.Equal(scope, fields["SCOPE"]);
+            Assert.Equal(scope + " => " + message, fields[JournalFieldName.Message.ToString()]);
+        }
+
+        [Fact]
+        private void WriteExceptionInfoInToMessage()
+        {
+            const string message = "A message";
+
+            var logger = Logger(includeExceptionInfoInMessage: true);
+            Exception? exception = null;
+
+            try
+            {
+                ThrowExceptionWrapper();
+            }
+            catch (Exception e)
+            {
+                exception = e;
+                logger.LogError(e, message);
+            }
+
+            var fields = ReadFields();
+
+            Assert.Equal(message + "\n" + exception!, fields[JournalFieldName.Message.ToString()]);
         }
 
     }

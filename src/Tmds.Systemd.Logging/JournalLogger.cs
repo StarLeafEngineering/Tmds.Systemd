@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.Extensions.Logging;
 
 namespace Tmds.Systemd.Logging
@@ -23,6 +24,8 @@ namespace Tmds.Systemd.Logging
         private readonly string   _syslogIdentifier;
         private readonly Action<Exception, JournalMessage> _exceptionFormatter;
         private readonly Dictionary<string, string> _extraFields;
+        private readonly bool _includeScopesInMessage;
+        private readonly bool _includeExceptionInfoInMessage;
 
         internal JournalLogger(string name, IExternalScopeProvider scopeProvider, JournalLoggerOptions options)
         {
@@ -41,6 +44,8 @@ namespace Tmds.Systemd.Logging
             _additionalFlags |= LogFlags.DontAppendSyslogIdentifier;
             _exceptionFormatter = options.ExceptionFormatter;
             _extraFields = options.ExtraFields;
+            _includeScopesInMessage = options.IncludeScopesInMessage;
+            _includeExceptionInfoInMessage = options.IncludeExceptionInfoInMessage;
         }
 
         internal IExternalScopeProvider ScopeProvider { get; set; }
@@ -115,6 +120,27 @@ namespace Tmds.Systemd.Logging
                     }
                     if (!string.IsNullOrEmpty(message))
                     {
+                        if (_includeScopesInMessage || _includeExceptionInfoInMessage)
+                        {
+                            var writer = new StringWriter();
+                            if (_includeScopesInMessage)
+                            {
+                                ScopeProvider.ForEachScope(
+                                    (scope, writerState) =>
+                                    {
+                                        writerState.Write(scope);
+                                        writerState.Write(" => ");
+                                    },
+                                    writer);
+                            }
+                            writer.Write(message);
+                            if (_includeExceptionInfoInMessage && exception != null)
+                            {
+                                writer.Write("\n");
+                                writer.Write(exception);
+                            }
+                            message = writer.GetStringBuilder().ToString();
+                        }
                         logMessage.Append(JournalFieldName.Message, message);
                     }
                     var scopeProvider = ScopeProvider;
